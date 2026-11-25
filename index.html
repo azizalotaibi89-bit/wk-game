@@ -622,6 +622,51 @@ function shade(hex,amt){
   return 'rgb('+r+','+g+','+bl+')';
 }
 
+/* طيارة إعلانية تسحب بنر عليه شعار المطعم، تمر في السما كل فترة */
+var PLANE_LOOP=1500;
+function drawPlane(){
+  var span=VW+260, t=(frame%PLANE_LOOP)/PLANE_LOOP;
+  var px=VW+40-t*span*1.15, py=60+Math.sin(frame/50)*4;
+  if(px<-200 || px>VW+60) return;
+  b.save(); b.translate(Math.round(px*RES)/RES, Math.round(py*RES)/RES); b.scale(1.5,1.5);
+  // rope
+  var bx=34, bw=74, bh=26;
+  b.strokeStyle='rgba(60,40,30,.8)'; b.lineWidth=0.7;
+  b.beginPath(); b.moveTo(18,1); b.lineTo(bx,-bh/2+3); b.moveTo(18,1); b.lineTo(bx,bh/2-3); b.stroke();
+  // waving banner: drawn in vertical slices with a sine offset
+  var slices=18, sw=bw/slices, k, off;
+  for(k=0;k<slices;k++){
+    off=Math.sin(frame/9 - k*0.55)*1.6*(k/slices+0.2);
+    rect(bx+k*sw, -bh/2+off, sw+0.6, bh, '#ffffff');
+    rect(bx+k*sw, -bh/2+off, sw+0.6, 1.4, C.primary);
+    rect(bx+k*sw, bh/2-1.4+off, sw+0.6, 1.4, C.primary);
+  }
+  if(LOGO.img){
+    var img=LOGO.img, s=Math.min((bw-10)/img.width,(bh-6)/img.height), iw=img.width*s, ih=img.height*s, ix=bx+(bw-iw)/2, iy=-ih/2;
+    var n=14, srcW=img.width/n, dw=iw/n;
+    for(k=0;k<n;k++){
+      var cx=ix+k*dw, kk=(cx-bx)/sw;
+      off=Math.sin(frame/9 - kk*0.55)*1.6*(kk/slices+0.2);
+      b.drawImage(img, k*srcW, 0, srcW+0.5, img.height, cx, iy+off, dw+0.3, ih);
+    }
+  } else {
+    b.fillStyle=C.primary; b.font='900 12px Cairo, sans-serif'; b.textAlign='center'; b.textBaseline='middle'; b.fillText(CONFIG.name,bx+bw/2,0);
+  }
+  rect(bx+bw-1, -bh/2+Math.sin(frame/9-(slices-1)*0.55)*1.9, 1.6, bh, C.primary);
+  // plane (flying left)
+  var body='#ffffff', trim=C.primary;
+  b.fillStyle=trim; b.beginPath(); b.moveTo(16,-1); b.lineTo(22,-8); b.lineTo(24,-8); b.lineTo(22,0); b.fill();   // tail fin
+  b.fillStyle=body; b.beginPath(); b.ellipse(8,0,13,3.6,0,0,7); b.fill();                                    // fuselage
+  rect(-3,-0.6,22,1.4,trim);                                                                                 // stripe
+  b.fillStyle='#8fd3ff'; b.beginPath(); b.ellipse(1,-2.2,3.2,1.8,0,Math.PI,0); b.fill();                      // cockpit
+  rect(4,0.5,8,2.2,'#d9d9d9'); rect(4,0.5,8,0.8,'#ffffff');                                                   // wing
+  rect(17,-0.5,5,1.4,'#d9d9d9');                                                                              // tail wing
+  rect(-6.2,-1.5,1.6,3,'#555');                                                                               // nose
+  var pr=Math.abs(Math.sin(frame*0.9))*6;                                                                     // propeller
+  rect(-6.8,-pr/2,0.9,pr,'rgba(60,60,60,.75)');
+  if(theme.stars && frame%40<20){ rect(9,-4.2,1.2,1.2,'#ff4040'); rect(22,-8.6,1.2,1.2,'#7cff7c'); }        // night lights
+  b.restore();
+}
 function drawBg(cam){
   var gr=b.createLinearGradient(0,0,0,VH); gr.addColorStop(0,theme.sky[0]); gr.addColorStop(1,theme.sky[1]);
   b.fillStyle=gr; b.fillRect(0,0,VW,VH);
@@ -635,6 +680,7 @@ function drawBg(cam){
   for(i=-1;i<8;i++){ x=i*260-(cam*0.25)%260; b.fillStyle=theme.cloud; b.globalAlpha=theme.stars?0.5:0.95;
     var cy=30+(i&1)*22; b.beginPath(); b.arc(x+20,cy,10,0,7); b.arc(x+34,cy-6,13,0,7); b.arc(x+50,cy,10,0,7); b.fill(); b.fillRect(x+20,cy,30,10);
     b.globalAlpha=1; }
+  drawPlane();
   for(i=-1;i<8;i++){ x=i*200-(cam*0.5)%200;
     b.fillStyle=theme.hill2; b.beginPath(); b.ellipse(x+40,13*T,60,44,0,Math.PI,0); b.fill();
     b.fillStyle=theme.hill; b.beginPath(); b.ellipse(x+130,13*T,38,26,0,Math.PI,0); b.fill(); }
